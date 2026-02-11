@@ -1,0 +1,5 @@
+python-telegram-bot
+jdatetime
+aiosqlite
+pytz
+asyncping3

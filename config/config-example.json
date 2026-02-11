@@ -1,0 +1,20 @@
+{
+  "BOT_TOKEN": "BOT-TOKEN",
+  "BOT_USERNAME": "BOT-USERNAME",
+  "CONTENT_MANAGER": [123456789],
+  "ADMINS": [123456789],
+  "OWNERS": [123456789],
+  "DB_PATH": "bot.db",
+  "VERSION": "v1.0.0",
+  "MEME_CONTENT_MANAGER_CHAT_ID": -100123456789,
+  "MEME_REVIEW_CHAT_ID": -100123456789,
+  "MEME_APPROVE_UPVOTES": 10,
+  "MEME_REJECT_GAP": 5,
+  "REQUIRED_CHATS": [
+    {
+      "title": "test-name",
+      "join_link": "https://t.me/YOURINVITELINK",
+      "chat_id": -100123456789
+    }
+  ]
+}

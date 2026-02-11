@@ -1,0 +1,135 @@
+{
+  "required_chat": {
+    "message": "🚫 برای استفاده از بات باید در کانال و گروه‌های زیر عضو شوید:",
+    "bot_not_joined": "⚠️ ربات در چت {chat_id} ({title}) عضو نیست!",
+    "bot_no_access": "❌ دسترسی به چت {chat_id} ({title}) وجود ندارد یا پیدا نشد."
+  },
+  "main_menu": {
+    "title": "سلام، به ربات پیکسل میم خوش اومدین 👾\n\n⚙️ {version}",
+    "buttons": {
+      "search": "🔎 جستجوی میم 🔎",
+      "help": "راهنما 🧐"
+    }
+  },
+  "help": "راهنمای ربات هنوز نوشته نشدهههه 🗣\n\n⚙️ {version}",
+  "dev": "ساخته شده با ❤️\n<b>⚙️ {version}</b>",
+  "cancel_note": "برای لغو دستور از /cancel استفاده کنید 😉",
+  "backtomain": "🔙 بازگشت",
+  "close_menu": "❌ بستن منو ❌",
+  "cancel": "❌ دستور لغو شد",
+  "admin": {
+    "panel_text": "{jdatetime}\nــــــــــــــــــــــــــــــــــــــــــــــــــــــــــ\n☀️ گزارش روزانه ربات ☀️\n👤 کاربران جدید: {today_user_count}\n📈 تعداد استفاده: {today_usage_count}\n📥 تعداد میم های جدید: {new_meme_count}\n\n📊 گزارش کلی ربات 📊\n👤 تعداد کاربران: {total_user_count}\n📈 تعداد استفاده: {total_usage_count}\n🚫 تعداد کاربران بن شده: {banned_user_count}\n📥 تعداد میم ها: {total_meme_count}\n⏳ تعداد میم های تایید نشده: {unverified_meme_count}",
+    "panel_keyboard": {
+      "ping_bot": "پینگ تلگرام 🏓",
+      "remove_all_unverified": "⚠️ حذف میم های تایید نشده ⚠️",
+      "unban_all": "❗️آن بن کردن کل کاربران ❗️",
+      "reload_config": "به روز رسانی فایل کانفیگ 🔄",
+      "reload_texts": "به روز رسانی فایل متن 🔄"
+    },
+    "ping_result": "پینگ به تلگرام {ping} میلی ثانیه",
+    "unban_all": "تعداد {count} کاربر آن بن شدند ✅",
+    "remove_all_unverified": {
+      "pending": "در حال حذف میم های تایید نشده ⚠️",
+      "result": "تعداد {removed} میم حذف شد و حذف {failed} میم دچار خطا شد."
+    },
+    "reload_config": {
+      "success": "فایل کانفیگ با موفقیت به روز شد ✅",
+      "error": "خطا در به روز رسانی فایل کانفیگ ❌"
+    },
+    "reload_texts": {
+      "success": "فایل متن با موفقیت به روز شد ✅",
+      "error": "خطا در به روز رسانی فایل متن ❌"
+    },
+    "broadcast": {
+      "message": "برای ارسال پیام همگانی، این دستور را روی پیام مورد نظر ریپلای کنید.\nیا یک آیدی عددی بدهید.",
+      "result": "✅ <b>ارسال شد</b>\n\n🟢 موفق : {success}\n🔴 ناموفق : {failed}"
+    },
+    "ban_state_changed": "✅ وضعیت بن کاربر تغییر کرد",
+    "user_info": "<b>ℹ️ اطلاعات کاربر</b>\n\n<b>• شناسه:</b> <code>{user_id}</code>\n<b>• میم های ثبت شده:</b> {total_memes}\n<b>• میم های تایید نشده:</b> {unverified_memes}\n<b>• میم های ثبت شده امروز:</b> {today_memes}\n<b>• تعداد استفاده:</b> {total_usage}\n<b>• تعداد استفاده امروز:</b> {today_usage}\n<b>• ثبت نام:</b> {created_at} <i>({created_ago} پیش)</i>\n<b>• وضعیت:</b> {status}"
+  },
+  "meme": {
+    "ask_media": "میم خود را ارسال کنید. میم های ویدیویی و ویس ها پشتیبانی می شود 🥰",
+    "ask_title": "عنوان میم را ارسال کنید:",
+    "ask_tags": "تگ میم را ارسال کنید. هر تگ در یک خط جدا.",
+    "ask_confirm": "<b>آیا تایید می کنید؟</b>\n\n➕عنوان میم: {title}\n🏷تگ های میم: {tags}\n📥 نوع میم: {type}",
+    "meme_canceled": "❌ لغو شد.",
+    "sent_for_review": "✅ میم با موفقیت به کانال رای گیری ارسال شد.",
+    "meme_added_to_bot": "✅ میم شما به ربات اضافه شد.",
+    "meme_vote_approved": "✅ میم شما با موفقیت ۱۰ رای مثبت گرفت و به ربات اضافه شد.",
+    "meme_vote_rejected": "❌ متاسفانه میم شما توسط کاربران رد شد.",
+    "content_manager_caption": "👾 میم جدید ثبت شد 👾\n\n📎 عنوان میم: {title}\n🏷 تگ های میم: {tags}\n👤 منتشر کننده میم: {publisher}",
+    "content_manager_approved": "✅ میم با عنوان «{meme_title}» توسط {admin_name} به چنل رای گیری فرستاده شد.",
+    "content_manager_rejected": "🚫 میم با عنوان «{meme_title}» توسط {admin_name} رد شد.",
+    "vote_caption": "👾 میم جدید ثبت شد 👾\n\n📎 عنوان میم: {title}\n🏷 تگ های میم: <blockquote>{tags}</blockquote>",
+    "alert": {
+      "vote": {
+        "saved": "✅ رای شما با موفقیت ثبت شد.",
+        "already": "⚠️ شما قبلا به این میم رای داده اید.",
+        "failed": "❌ خطا در ثبت رای",
+        "self": "نمیتونی به میم خودت رای بدی 😒"
+      }
+    },
+    "button": {
+      "upvote": "👍 {count}",
+      "downvote": "👎 {count}",
+      "approve_admin": "👍",
+      "reject_admin": "👎"
+    },
+    "errors": {
+      "error_invalid_media": "❌ نوع فایل ارسالی توسط ربات پشتیبانی نمی شود. فایل باید ویدیو یا ویس باشد.",
+      "duration_limit_error": "❌ محتوا نباید بیشتر از ۶۰ ثانیه باشد.",
+      "error_title_length": "❌ عنوان میم باید بین ۳ تا ۱۰۰ کاراکتر باشد.",
+      "error_invalid_tag_count": "❌ تعداد تگ های میم باید بین ۳ تا ۸ باشد. لطفا دوباره ارسال کنید.",
+      "error_tag_too_long": "❌ تگ {tag} باید حداکثر ۳۰ کاراکتر باشد.",
+      "error_duplicate_media": "❌ این فایل قبلاً به ربات اضافه شده است.",
+      "review_send_failed": "❌ خطا در ارسال میم به چنل رای گیری. لطفا به سازنده ربات اطلاع دهید.",
+      "convert_to_voice": "⚠️ لطفا قبل از ارسال فایل Audio اون رو با دستور /voice به ویس تبدیل کنید و دوباره با دستور /new و فوروارد کردن فایل تبدیل شده به ربات، میم خود را اضافه کنید."
+    },
+    "meme_admin": {
+      "info": "✅ اطلاعات میم دریافت شد!\n\n‏<b>🆔 شناسه میم:</b> <code>{uuid}</code>\n<b>🏷 عنوان میم:</b> {title}\n<b>🔖 تگ‌های میم:</b> {tags}\n<b>🧬 شناسه محتوایی:</b> <code>{file_id}</code>\n<b>🎞 نوع میم:</b> {type}\n<b>👤 منتشرکننده میم:</b> <code>{publisher_id}</code>\n<b>✅ وضعیت تأیید:</b> {is_verified}\n<b>⛔️ وضعیت بن:</b> {is_banned}\n<b>⏰ زمان ایجاد:</b> {created_at}",
+      "buttons": {
+        "remove": "🗑 حذف میم 🗑",
+        "ban_change": "🚫 تغییر وضعیت بن 🚫",
+        "verify": "✅ تغییر وضعیت تایید"
+      },
+      "alert": {
+        "remove_success": "🗑️ میم از دیتابیس حذف شد.",
+        "remove_failed": "⚠️ مشکلی در حذف میم رخ داد.",
+        "ban_success": "✅ وضعیت بن میم تغییر کرد.",
+        "verify_success": "✅ میم با موفقیت تایید شد.",
+        "already_verified": "⚠️ میم در حال حاضر در وضعیت تایید شده قرار دارد."
+      },
+      "errors": {
+        "file_id": "❌ خطا در استخراج شناسه فایل.",
+        "meme_not_found": "❌ میم در دیتابیس یافت نشد."
+      },
+      "edit_title": {
+        "success": "✅ عنوان میم به <b>{new_title}</b> تغییر یافت.",
+        "enter_title": "❌ لطفا عنوان جدید را به همراه یک فاصله بعد از دستور قرار دهید."
+      },
+      "edit_tags": {
+        "success": "✅ تگ‌های میم بروزرسانی شدند:\n<blockquote>{new_tags}</blockquote>",
+        "enter_tags": "❌ لطفا تگ های جدید را هر کدام در خط جدا بعد از دستور قرار دهید.\n<blockquote>/edit_tags\nتگ اول\nتگ دوم\nتگ سوم\n</blockquote>"
+      }
+    }
+  },
+  "convert_to_voice": {
+    "help": "برای تبدیل به ویس این دستور را روی فایل مورد نظر خود ریپلای کنید.",
+    "error_not_audio": "⚠️ دستور باید روی فایل صوتی ریپلای کنید.",
+    "error_duration": "❌ مدت فایل صوتی باید حداکثر ۵ دقیقه باشد.",
+    "error_size": "❌ حجم فایل باید حداکثر ۱۰ مگابایت باشد.",
+    "ffmpeg_timeout": "❌ پردازش فایل به دلیل محدودیت زمانی پردازش لغو شد.",
+    "ffmpeg_failed": "❌ خطا در تبدیل فایل صوتی به ویس."
+  },
+  "errors": {
+    "access_denied": "⚠️ شما دسترسی لازم ندارید",
+    "banned": "⛔️ دسترسی شما مسدود است",
+    "invalid_command": "⚠️ فرمت دستور درست نیست",
+    "db_error": "⚠️ خطای داخلی. لطفاً دوباره تلاش کن یا به پشتیبانی پیام بده",
+    "not_found": "⚠️ یافت نشد",
+    "user_notfound": "⚠️ کاربر یافت نشد",
+    "failed_to_fetch_user": "⚠️ خطا در دریافت اطلاعات اکانت از سرور تلگرام",
+    "private_message_only": "⚠️ این دستور فقط از طریق پیوی ربات قابل دسترسی است",
+    "reply_only": "❌ دستور باید روی پیام مورد نظر ریپلای شود"
+  }
+}
