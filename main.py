@@ -42,6 +42,7 @@ async def global_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Empty Callback
     if data == "emptycallback":
+        await query.answer(r"¯\_(ツ)_/¯")
         return
 
 # ——— App bootstrap ———
