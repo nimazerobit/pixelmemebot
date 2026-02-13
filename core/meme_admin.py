@@ -52,13 +52,13 @@ async def get_meme(update: Update, context: ContextTypes.DEFAULT_TYPE, uuid: str
     # keyboard
     keyboard = [
         [
-            InlineKeyboardButton(TEXTS["meme"]["meme_admin"]["buttons"]["remove"], callback_data=f"admin_delete_meme:{uuid}"),
-            InlineKeyboardButton(TEXTS["meme"]["meme_admin"]["buttons"]["ban_change"], callback_data=f"admin_ban_meme:{uuid}"),
+            InlineKeyboardButton(TEXTS["meme"]["meme_admin"]["buttons"]["remove"], callback_data=f"admin_delete_meme:{uuid}", api_kwargs={"style": "danger"}),
+            InlineKeyboardButton(TEXTS["meme"]["meme_admin"]["buttons"]["ban_change"], callback_data=f"admin_ban_meme:{uuid}", api_kwargs={"style": "primary"}),
         ],
     ]
     if not meme_info['is_verified']:
         keyboard.append([
-            InlineKeyboardButton(TEXTS["meme"]["meme_admin"]["buttons"]["verify"], callback_data=f"admin_toggle_verify:{uuid}")
+            InlineKeyboardButton(TEXTS["meme"]["meme_admin"]["buttons"]["verify"], callback_data=f"admin_toggle_verify:{uuid}", api_kwargs={"style": "success"})
         ])
 
     # info text

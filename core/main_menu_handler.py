@@ -8,7 +8,7 @@ def main_menu_keyboard():
     button_text = TEXTS["main_menu"]["buttons"]
     rows = [
         [InlineKeyboardButton(button_text["search"], switch_inline_query_current_chat="")],
-        [InlineKeyboardButton(button_text["help"], callback_data="help")]
+        [InlineKeyboardButton(button_text["help"], callback_data="help", api_kwargs={"style": "primary"})]
     ]
     return InlineKeyboardMarkup(rows)
 

@@ -11,22 +11,22 @@ from core.utils import check_user, is_admin, is_owner, now_ts, fmt_ts, human_ago
 def admin_panel_keyboard(user_id: int):
     rows = [
         [
-            InlineKeyboardButton(TEXTS["admin"]["panel_keyboard"]["ping_bot"], callback_data="admin_ping")
+            InlineKeyboardButton(TEXTS["admin"]["panel_keyboard"]["ping_bot"], callback_data="admin_ping", api_kwargs={"style": "success"})
         ]
     ]
     if is_owner(user_id):
         rows.extend([
             [
-                InlineKeyboardButton(TEXTS["admin"]["panel_keyboard"]["remove_all_unverified"], callback_data="admin_remove_unverified")
+                InlineKeyboardButton(TEXTS["admin"]["panel_keyboard"]["remove_all_unverified"], callback_data="admin_remove_unverified", api_kwargs={"style": "danger"})
             ],
             [
-                InlineKeyboardButton(TEXTS["admin"]["panel_keyboard"]["unban_all"], callback_data="admin_unban_all")
+                InlineKeyboardButton(TEXTS["admin"]["panel_keyboard"]["unban_all"], callback_data="admin_unban_all", api_kwargs={"style": "danger"})
             ],
             [
-                InlineKeyboardButton(TEXTS["admin"]["panel_keyboard"]["reload_config"], callback_data="reload_config")
+                InlineKeyboardButton(TEXTS["admin"]["panel_keyboard"]["reload_config"], callback_data="reload_config", api_kwargs={"style": "primary"})
             ],
             [
-                InlineKeyboardButton(TEXTS["admin"]["panel_keyboard"]["reload_texts"], callback_data="reload_texts")
+                InlineKeyboardButton(TEXTS["admin"]["panel_keyboard"]["reload_texts"], callback_data="reload_texts", api_kwargs={"style": "primary"})
             ]
         ])
     return InlineKeyboardMarkup(rows)

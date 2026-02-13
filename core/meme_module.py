@@ -212,8 +212,8 @@ async def get_tags(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["uuid"] = str(uuid4())
 
     markup = InlineKeyboardMarkup([[
-            InlineKeyboardButton("✅ تایید", callback_data="meme_confirm"),
-            InlineKeyboardButton("❌ لغو", callback_data="meme_cancel"),
+            InlineKeyboardButton("✅ تایید", callback_data="meme_confirm", api_kwargs={"style": "success"}),
+            InlineKeyboardButton("❌ لغو", callback_data="meme_cancel", api_kwargs={"style": "danger"}),
     ]])
 
     await update.effective_chat.send_message(
@@ -401,8 +401,8 @@ async def meme_vote(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # --- update buttons with live counts ---
     keyboard = InlineKeyboardMarkup([[
-        InlineKeyboardButton(TEXTS["meme"]["button"]["upvote"].format(count=likes), callback_data=f"meme_vote:{uuid}:1"),
-        InlineKeyboardButton(TEXTS["meme"]["button"]["downvote"].format(count=dislikes), callback_data=f"meme_vote:{uuid}:-1"),
+        InlineKeyboardButton(TEXTS["meme"]["button"]["upvote"].format(count=likes), callback_data=f"meme_vote:{uuid}:1", api_kwargs={"style": "success"}),
+        InlineKeyboardButton(TEXTS["meme"]["button"]["downvote"].format(count=dislikes), callback_data=f"meme_vote:{uuid}:-1", api_kwargs={"style": "danger"}),
     ]])
     try:
         await query.edit_message_reply_markup(reply_markup=keyboard)
@@ -414,8 +414,8 @@ async def send_to_vote_channel(update: Update, context: ContextTypes.DEFAULT_TYP
     query = update.callback_query
 
     vote_keyboard = InlineKeyboardMarkup([[
-        InlineKeyboardButton(TEXTS["meme"]["button"]["upvote"].format(count="بدون رای"), callback_data=f"meme_vote:{user_data['uuid']}:1"),
-        InlineKeyboardButton(TEXTS["meme"]["button"]["downvote"].format(count="بدون رای"), callback_data=f"meme_vote:{user_data['uuid']}:-1"),
+        InlineKeyboardButton(TEXTS["meme"]["button"]["upvote"].format(count="بدون رای"), callback_data=f"meme_vote:{user_data['uuid']}:1", api_kwargs={"style": "success"}),
+        InlineKeyboardButton(TEXTS["meme"]["button"]["downvote"].format(count="بدون رای"), callback_data=f"meme_vote:{user_data['uuid']}:-1", api_kwargs={"style": "danger"}),
     ]])
 
     if "tags" in user_data and user_data["tags"]:
@@ -482,8 +482,8 @@ async def send_to_admin_vote_group(update: Update, context: ContextTypes.DEFAULT
     query = update.callback_query
 
     admin_keyboard = InlineKeyboardMarkup([[
-        InlineKeyboardButton(TEXTS["meme"]["button"]["approve_admin"], callback_data=f"admin_vote:approve:{user_data['uuid']}"),
-        InlineKeyboardButton(TEXTS["meme"]["button"]["reject_admin"], callback_data=f"admin_vote:reject:{user_data['uuid']}"),
+        InlineKeyboardButton(TEXTS["meme"]["button"]["approve_admin"], callback_data=f"admin_vote:approve:{user_data['uuid']}", api_kwargs={"style": "success"}),
+        InlineKeyboardButton(TEXTS["meme"]["button"]["reject_admin"], callback_data=f"admin_vote:reject:{user_data['uuid']}", api_kwargs={"style": "danger"}),
     ]])
 
     is_meme_existing = True if await DBH.get_meme_by_uuid(user_data["uuid"]) else False
