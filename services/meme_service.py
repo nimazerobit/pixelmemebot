@@ -27,6 +27,8 @@ class MemeService:
     
     async def get_meme_by_file_id(self, file_id: str) -> Optional[Meme]:
         meme = await self.meme_repo.get_by_file_id(file_id)
+        if meme:
+            meme.tags = await self.meme_repo.get_tags(meme.uuid)
         return meme
     
     async def meme_file_exists(self, file_id: str) -> bool:
