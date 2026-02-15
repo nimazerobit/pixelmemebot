@@ -267,11 +267,6 @@ async def admin_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not is_owner(user_id):
             await query.answer(TEXTS["errors"]["access_denied"], show_alert=True)
             return
-        
-        try:
-            await query.answer(TEXTS["admin"]["remove_all_unverified"]["pending"], show_alert=False)
-        except Exception:
-            pass
 
         removed = 0
         failed = 0
@@ -293,16 +288,20 @@ async def admin_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except Exception:
                 failed += 1
 
-        # update admin panel and notify result
+        # show result
         try:
-            await query.edit_message_text(await admin_panel_text(), reply_markup=admin_panel_keyboard(update.effective_user.id), parse_mode="HTML")
-        except Exception:
+            await query.answer(TEXTS["admin"]["remove_all_unverified"].format(removed=removed, failed=failed), show_alert=True)
+        except Exception as e:
+            print(e)
             pass
 
-        try:
-            await query.answer(TEXTS["admin"]["remove_all_unverified"]["result"].format(removed=removed, failed=failed), show_alert=True)
-        except Exception:
-            pass
+        # update admin panel and notify result
+        if removed > 0:
+            try:
+                await query.edit_message_text(await admin_panel_text(), reply_markup=admin_panel_keyboard(update.effective_user.id), parse_mode="HTML")
+            except Exception:
+                pass
+
         return
 
     elif data == "admin_ping":

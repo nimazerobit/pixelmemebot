@@ -28,10 +28,7 @@
     },
     "ping_result": "پینگ به تلگرام {ping} میلی ثانیه",
     "unban_all": "تعداد {count} کاربر آن بن شدند ✅",
-    "remove_all_unverified": {
-      "pending": "در حال حذف میم های تایید نشده ⚠️",
-      "result": "تعداد {removed} میم حذف شد و حذف {failed} میم دچار خطا شد."
-    },
+    "remove_all_unverified": "تعداد {removed} میم حذف شد و حذف {failed} میم دچار خطا شد.",
     "reload_config": {
       "success": "فایل کانفیگ با موفقیت به روز شد ✅",
       "error": "خطا در به روز رسانی فایل کانفیگ ❌"
