@@ -113,30 +113,44 @@ async def edit_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await message.reply_text(TEXTS["meme"]["meme_admin"]["errors"]["meme_not_found"])
         return
 
-    new_title = message.text.partition(" ")[2].strip()
+    meme.title = message.text.partition(" ")[2].strip()
 
-    if not new_title:
+    if not meme.title:
         await message.reply_text(TEXTS["meme"]["meme_admin"]["edit_title"]["enter_title"])
         return
 
-    if len(new_title) < 3 or len(new_title) > 100:
+    if len(meme.title) < 3 or len(meme.title) > 100:
         await message.reply_text(TEXTS["meme"]["errors"]["error_title_length"])
         return
 
-    await meme_service.update_title(meme.uuid, new_title)
+    await meme_service.update_title(meme.uuid, meme.title)
+
+    admin_keyboard = InlineKeyboardMarkup([[
+        InlineKeyboardButton(TEXTS["meme"]["button"]["approve_admin"], callback_data=f"admin_vote:approve:{meme.uuid}", api_kwargs={"style": "success"}),
+        InlineKeyboardButton(TEXTS["meme"]["button"]["reject_admin"], callback_data=f"admin_vote:reject:{meme.uuid}", api_kwargs={"style": "danger"}),
+    ]])
 
     if meme.review_chat_id and meme.review_message_id:
-        chat_info = await context.bot.get_chat(meme.publisher_user_id)
-        publisher_fullname = chat_info.full_name
-        caption_text = TEXTS["meme"]["content_manager_caption"].format(
-            title=new_title, tags=", ".join(meme.tags), publisher=f"{publisher_fullname} ({meme.publisher_user_id})"
-        )
         try:
-            await context.bot.edit_message_caption(chat_id=meme.review_chat_id, message_id=meme.review_message_id, caption=caption_text)
+            chat_info = await context.bot.get_chat(meme.publisher_user_id)
+            publisher_fullname = chat_info.full_name
+            tags_list = meme.tags if meme.tags else []
+            caption_text = TEXTS["meme"]["content_manager_caption"].format(
+                title=meme.title, 
+                tags=", ".join(tags_list),
+                publisher=f"{publisher_fullname} ({meme.publisher_user_id})"
+            )
+            await context.bot.edit_message_caption(
+                chat_id=meme.review_chat_id, 
+                message_id=meme.review_message_id, 
+                caption=caption_text,
+                reply_markup=admin_keyboard,
+                parse_mode="HTML"
+            )
         except Exception:
             pass
 
-    await message.reply_text(TEXTS["meme"]["meme_admin"]["edit_title"]["success"].format(new_title=new_title), parse_mode="HTML")
+    await message.reply_text(TEXTS["meme"]["meme_admin"]["edit_title"]["success"].format(new_title=meme.title), parse_mode="HTML")
 
 
 async def edit_tags(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -191,14 +205,27 @@ async def edit_tags(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
     await meme_service.update_tags(meme.uuid, tags)
 
+    admin_keyboard = InlineKeyboardMarkup([[
+        InlineKeyboardButton(TEXTS["meme"]["button"]["approve_admin"], callback_data=f"admin_vote:approve:{meme.uuid}", api_kwargs={"style": "success"}),
+        InlineKeyboardButton(TEXTS["meme"]["button"]["reject_admin"], callback_data=f"admin_vote:reject:{meme.uuid}", api_kwargs={"style": "danger"}),
+    ]])
+
     if meme.review_chat_id and meme.review_message_id:
-        chat_info = await context.bot.get_chat(meme.publisher_user_id)
-        publisher_fullname = chat_info.full_name
-        caption_text = TEXTS["meme"]["content_manager_caption"].format(
-            title=meme.title, tags=', '.join(tags), publisher=f"{publisher_fullname} ({meme.publisher_user_id})"
-        )
         try:
-            await context.bot.edit_message_caption(chat_id=meme.review_chat_id, message_id=meme.review_message_id, caption=caption_text)
+            chat_info = await context.bot.get_chat(meme.publisher_user_id)
+            publisher_fullname = chat_info.full_name
+            caption_text = TEXTS["meme"]["content_manager_caption"].format(
+                title=meme.title, 
+                tags=", ".join(meme.tags), 
+                publisher=f"{publisher_fullname} ({meme.publisher_user_id})"
+            )
+            await context.bot.edit_message_caption(
+                chat_id=meme.review_chat_id, 
+                message_id=meme.review_message_id, 
+                caption=caption_text,
+                reply_markup=admin_keyboard,
+                parse_mode="HTML"
+            )
         except Exception:
             pass
 
