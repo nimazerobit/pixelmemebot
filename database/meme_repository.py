@@ -147,29 +147,38 @@ class MemeRepository:
             await con.commit()
 
     async def search_inline(self, user_id: int, query: str = "", limit: int = 50, offset: int = 0) -> List[dict]:
-        """
-        Returns a list of dictionaries because this is a complex aggregation
-        that doesn't map 1:1 to the Meme Model (it includes last_used_ts).
-        """
         async with aiosqlite.connect(self.db.path) as con:
             con.row_factory = aiosqlite.Row
-            search_pattern = f"%{query}%" if query else ""
             sql = """
             SELECT m.uuid, m.file_id, m.title, m.type, m.created_at, MAX(mu.created_at) as last_used_ts
             FROM memes m
             LEFT JOIN meme_usage mu ON m.uuid = mu.meme_uuid AND mu.user_id = ?
-            LEFT JOIN meme_tags mt ON m.uuid = mt.meme_uuid
-            WHERE m.is_verified = 1 AND m.is_banned = 0
-            AND (
-                ? = '' 
-                OR m.title LIKE ? 
-                OR mt.tag LIKE ?
-            )
+            """
+            args = [user_id]
+            where_conditions = ["m.is_verified = 1", "m.is_banned = 0"]
+            keywords = query.strip().split() if query else []
+            if keywords:
+                for word in keywords:
+                    search_pattern = f"%{word}%"
+                    condition = """
+                    (
+                        m.title LIKE ? 
+                        OR EXISTS (
+                            SELECT 1 FROM meme_tags mt 
+                            WHERE mt.meme_uuid = m.uuid AND mt.tag LIKE ?
+                        )
+                    )
+                    """
+                    where_conditions.append(condition)
+                    args.extend([search_pattern, search_pattern])
+            if where_conditions:
+                sql += " WHERE " + " AND ".join(where_conditions)
+            sql += """
             GROUP BY m.uuid
             ORDER BY last_used_ts DESC NULLS LAST, m.created_at DESC
             LIMIT ? OFFSET ?
             """
-            args = (user_id, query, search_pattern, search_pattern, limit, offset)
+            args.extend([limit, offset])
             cur = await con.execute(sql, args)
             rows = await cur.fetchall()
             return [dict(row) for row in rows]
