@@ -274,7 +274,7 @@ async def admin_meme_decision(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     if action == "reject":
-        meme_service.delete_meme(uuid)
+        await meme_service.delete_meme(uuid)
 
         await query.edit_message_caption(
             caption=TEXTS["meme"]["content_manager_rejected"].format(meme_title=meme.title, admin_name=query.from_user.full_name),
@@ -282,22 +282,22 @@ async def admin_meme_decision(update: Update, context: ContextTypes.DEFAULT_TYPE
         )
         
         try:
-            await context.bot.send_message(meme["publisher_user_id"], TEXTS["meme"]["meme_vote_rejected"])
+            await context.bot.send_message(meme.publisher_user_id, TEXTS["meme"]["meme_vote_rejected"])
         except:
             pass
 
     elif action == "approve":
         await send_to_vote_channel(update, context, {
             "uuid": uuid,
-            "title": meme["title"],
-            "file_id": meme["file_id"],
-            "media_type": meme["type"],
-            "publisher_user_id": meme["publisher_user_id"],
+            "title": meme.title,
+            "file_id": meme.file_id,
+            "media_type": meme.type,
+            "publisher_user_id": meme.publisher_user_id,
 
         })
 
         await query.edit_message_caption(
-            caption=TEXTS["meme"]["content_manager_approved"].format(meme_title=meme["title"], admin_name=query.from_user.full_name),
+            caption=TEXTS["meme"]["content_manager_approved"].format(meme_title=meme.title, admin_name=query.from_user.full_name),
             parse_mode="HTML"
         )
 
@@ -318,8 +318,8 @@ async def meme_vote(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = query.from_user.id
 
     # --- validate vote ---
-    (current_stats, prev_vote) = await meme_service.get_vote_info(uuid, user_id)
-    meme = meme_service.get_meme_full_details(uuid)
+    (_, prev_vote) = await meme_service.get_vote_info(uuid, user_id)
+    meme = await meme_service.get_meme_full_details(uuid)
 
     if not meme:
         await query.answer(TEXTS["errors"]["not_found"], show_alert=True)
@@ -345,7 +345,7 @@ async def meme_vote(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await meme_service.verify_meme(uuid, True)
             action = "approved"
         else:
-            meme_service.set_ban(uuid, True)
+            await meme_service.set_ban(uuid, True)
             action = "rejected"
 
         if meme.review_chat_id and meme.review_message_id:
@@ -391,7 +391,7 @@ async def meme_vote(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if meme.publisher_user_id:
             await context.bot.send_message(meme.publisher_user_id, TEXTS["meme"]["meme_vote_rejected"])
-        meme_service.delete_meme(uuid)
+        await meme_service.delete_meme(uuid)
         return
 
     # --- update buttons with live counts ---
