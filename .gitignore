@@ -1,3 +1,4 @@
 *.db
 cache/
 config/config.json
+__pycache__/

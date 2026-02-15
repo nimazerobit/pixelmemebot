@@ -7,7 +7,8 @@ import jdatetime
 from datetime import datetime
 import pytz
 
-from core.config_loader import DBH, CFG, TEXTS
+from container import user_service
+from core.config_loader import CFG, TEXTS
 
 ### --- Humanize time --- ###
 def human_ago(seconds: int) -> str:
@@ -73,8 +74,8 @@ def get_persian_datetime_text():
 ### --- Check is user content manager or not --- ###
 async def is_content_manager(user_id: int) -> bool:
     # Check ban status
-    row = await DBH.get_user(user_id)
-    if row and row["banned"]:
+    user = await user_service.get_user(user_id)
+    if user and user.banned:
         return False
 
     # Check role
@@ -83,8 +84,8 @@ async def is_content_manager(user_id: int) -> bool:
 ### --- Check is user admin or not --- ###
 async def is_admin(user_id: int) -> bool:
     # Check ban status
-    row = await DBH.get_user(user_id)
-    if row and row["banned"]:
+    user = await user_service.get_user(user_id)
+    if user and user.banned:
         return False
 
     # Check role
@@ -101,7 +102,7 @@ async def ensure_user(update: Update) -> bool:
     if user is None:
         return False  # error
     try:
-        await DBH.upsert_user(user.id)
+        await user_service.register_user(user.id)
         return True
     except Exception:
         return False  # error
@@ -111,8 +112,8 @@ async def ban_guard(update: Update) -> bool:
     user = update.effective_user
     if not user:
         return True
-    row = await DBH.get_user(user.id)
-    if row and row["banned"]:
+    user = await user_service.get_user(user.id)
+    if user and user.banned:
         if update.callback_query:
             await update.callback_query.answer(TEXTS["errors"]["banned"])
         else:

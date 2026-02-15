@@ -1,11 +1,11 @@
 from telegram import (Update, InlineQueryResultsButton, InlineQueryResultCachedVideo, 
-    InlineQueryResultCachedVoice, InlineQueryResultArticle, InlineKeyboardMarkup, InlineKeyboardButton, InputTextMessageContent)
+    InlineQueryResultCachedVoice, InlineKeyboardMarkup, InlineKeyboardButton)
 from telegram.ext import ContextTypes, ConversationHandler
 from uuid import uuid4
-import aiosqlite
 
-from core.config_loader import DBH, TEXTS, CFG
-from core.utils import has_active_private_chat, is_owner, is_admin, is_content_manager, check_user
+from container import meme_service
+from core.config_loader import TEXTS, CFG
+from core.utils import has_active_private_chat, is_admin, is_content_manager, check_user
 
 PAGE_SIZE = 50
 
@@ -19,9 +19,9 @@ async def inline_meme_search(update: Update, context: ContextTypes.DEFAULT_TYPE)
     caption = None
 
     if "@" in raw_query:
-        before_at, after_at = raw_query.split("@", 1)
-        search_query = before_at.strip()
-        caption = after_at.strip() or None
+        parts = raw_query.split("@", 1)
+        search_query = parts[0].strip()
+        caption = parts[1].strip() or None
     else:
         search_query = raw_query
 
@@ -37,9 +37,8 @@ async def inline_meme_search(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # auth check
     pv_active = await has_active_private_chat(context.bot, user_id)
-    user_data = await DBH.get_user(user_id)
 
-    if not pv_active or not user_data:
+    if not pv_active:
         await context.bot.answer_inline_query(
             inline_query.id,
             results=[],
@@ -55,11 +54,11 @@ async def inline_meme_search(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # fetch memes
     fetch_limit = PAGE_SIZE + 1
 
-    memes = await DBH.get_inline_memes(
+    memes = await meme_service.search_memes_for_inline(
         user_id=user_id,
         query=search_query,
-        limit=fetch_limit,
-        offset=offset
+        offset=offset,
+        limit=fetch_limit
     )
 
     if not memes:
@@ -83,16 +82,13 @@ async def inline_meme_search(update: Update, context: ContextTypes.DEFAULT_TYPE)
     else:
         next_offset = ""
 
-    # fetch tags
-    uuid_list = [meme["uuid"] for meme in memes]
-    tags_map = await DBH.get_meme_tags_map(uuid_list)
-
     # build inline results
     results = []
 
     for meme in memes:
         meme_uuid = meme["uuid"]
-        tags = tags_map.get(meme_uuid, "")
+        
+        tags = meme.get("tags", "") 
         result_id = str(meme_uuid)
 
         description = caption if caption else tags
@@ -132,7 +128,7 @@ async def on_meme_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = result.from_user.id
     meme_uuid = result.result_id
     query_text = result.query
-    await DBH.upsert_meme_usage(meme_uuid, user_id, query_text)
+    await meme_service.record_usage(meme_uuid, user_id, query_text)
 
 
 ### --- Add New MEME --- ###
@@ -175,7 +171,7 @@ async def get_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # duplicate file_id check
     if not await is_content_manager(message.from_user.id):
-        if await DBH.meme_file_exists(file_id):
+        if await meme_service.meme_file_exists(file_id):
             await message.reply_text(TEXTS["meme"]["errors"]["error_duplicate_media"])
             return ConversationHandler.END
 
@@ -239,15 +235,15 @@ async def meme_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # admin -> instant approve
     if await is_admin(publisher_id):
-        await DBH.add_meme(
+        await meme_service.add_meme(
             uuid=data["uuid"],
             title=data["title"],
             file_id=data["file_id"],
             type_=data["media_type"],
-            publisher_user_id=publisher_id
+            publisher_id=publisher_id,
+            tags=data["tags"]
         )
-        await DBH.add_meme_tags(data["uuid"], data["tags"])
-        await DBH.set_meme_verified(data["uuid"], True)
+        await meme_service.verify_meme(data["uuid"], True)
 
         await query.edit_message_text(TEXTS["meme"]["meme_added_to_bot"])
         context.user_data.clear()
@@ -271,17 +267,17 @@ async def admin_meme_decision(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     _, action, uuid = query.data.split(":")
     
-    meme = await DBH.get_meme_by_uuid(uuid)
+    meme = await meme_service.get_meme_full_details(uuid)
     
     if not meme:
         await query.answer(TEXTS["errors"]["not_found"], show_alert=True)
         return
 
     if action == "reject":
-        DBH.delete_meme(uuid)
+        meme_service.delete_meme(uuid)
 
         await query.edit_message_caption(
-            caption=TEXTS["meme"]["content_manager_rejected"].format(meme_title=meme["title"], admin_name=query.from_user.full_name),
+            caption=TEXTS["meme"]["content_manager_rejected"].format(meme_title=meme.title, admin_name=query.from_user.full_name),
             parse_mode="HTML"
         )
         
@@ -322,81 +318,80 @@ async def meme_vote(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = query.from_user.id
 
     # --- validate vote ---
-    prev_vote = await DBH.get_user_vote(uuid, user_id)
-    publisher = DBH.get_meme_publisher(uuid)
+    (current_stats, prev_vote) = await meme_service.get_vote_info(uuid, user_id)
+    meme = meme_service.get_meme_full_details(uuid)
+
+    if not meme:
+        await query.answer(TEXTS["errors"]["not_found"], show_alert=True)
+        return
 
     if prev_vote == vote:
         await query.answer(TEXTS["meme"]["alert"]["vote"]["already"], show_alert=True)
         return
     
-    if publisher == user_id:
+    if meme.publisher_user_id == user_id:
         await query.answer(TEXTS["meme"]["alert"]["vote"]["self"], show_alert=True)
         return
 
     # --- store / update vote ---
-    await DBH.upsert_vote(uuid, user_id, vote)
+    await meme_service.vote_for_meme(uuid, user_id, vote)
     await query.answer(TEXTS["meme"]["alert"]["vote"]["saved"], show_alert=True)
-    likes, dislikes = await DBH.get_vote_counts(uuid)
+    (updated_stats, _) = await meme_service.get_vote_info(uuid, user_id)
+    likes, dislikes = updated_stats
 
     # --- admin override ---
     if await is_admin(user_id):
         if vote == 1:
-            await DBH.set_meme_verified(uuid, True)
+            await meme_service.verify_meme(uuid, True)
             action = "approved"
         else:
-            DBH.set_meme_banned(uuid, True)
+            meme_service.set_ban(uuid, True)
             action = "rejected"
 
-        review = DBH.get_review_message(uuid)
-        if review and review["review_chat_id"]:
+        if meme.review_chat_id and meme.review_message_id:
             try:
-                await context.bot.delete_message(review["review_chat_id"], review["review_message_id"])
+                await context.bot.delete_message(meme.review_chat_id, meme.review_message_id)
             except:
                 pass
 
-        publisher = DBH.get_meme_publisher(uuid)
-        if publisher:
-            await context.bot.send_message(publisher, TEXTS["meme"][f"meme_vote_{action}"])
+        if meme.publisher_user_id:
+            await context.bot.send_message(meme.publisher_user_id, TEXTS["meme"][f"meme_vote_{action}"])
         return
 
     # --- approval rule ---
     if likes >= CFG["MEME_APPROVE_UPVOTES"]:
-        await DBH.set_meme_verified(uuid, True)
+        await meme_service.verify_meme(uuid, True)
 
-        review = DBH.get_review_message(uuid)
-        if review and review["review_chat_id"]:
+        if meme.review_chat_id and meme.review_message_id:
             try:
                 await context.bot.delete_message(
-                    review["review_chat_id"],
-                    review["review_message_id"]
+                    meme.review_chat_id,
+                    meme.review_message_id
                 )
             except:
                 pass
 
-        publisher = DBH.get_meme_publisher(uuid)
-        if publisher:
+        if meme.publisher_user_id:
             await context.bot.send_message(
-                publisher,
+                meme.publisher_user_id,
                 TEXTS["meme"]["meme_vote_approved"]
             )
         return
 
     # --- rejection rule ---
     if dislikes >= likes + CFG["MEME_REJECT_GAP"]:
-        review = DBH.get_review_message(uuid)
-        if review and review["review_chat_id"]:
+        if meme.review_chat_id and meme.review_message_id:
             try:
                 await context.bot.delete_message(
-                    review["review_chat_id"],
-                    review["review_message_id"]
+                    meme.review_chat_id,
+                    meme.review_message_id
                 )
             except:
                 pass
 
-        publisher = DBH.get_meme_publisher(uuid)
-        if publisher:
-            await context.bot.send_message(publisher, TEXTS["meme"]["meme_vote_rejected"])
-        DBH.delete_meme(uuid)
+        if meme.publisher_user_id:
+            await context.bot.send_message(meme.publisher_user_id, TEXTS["meme"]["meme_vote_rejected"])
+        meme_service.delete_meme(uuid)
         return
 
     # --- update buttons with live counts ---
@@ -421,26 +416,26 @@ async def send_to_vote_channel(update: Update, context: ContextTypes.DEFAULT_TYP
     if "tags" in user_data and user_data["tags"]:
         tags = user_data["tags"]
     else:
-        tags = await DBH.get_meme_tags(user_data["uuid"])
+        meme = await meme_service.get_meme_full_details(user_data["uuid"])
+        tags = meme.tags
 
     caption = TEXTS["meme"]["vote_caption"].format(
         title=user_data["title"],
         tags=', '.join(tags)
     )
 
-    is_meme_existing = True if await DBH.get_meme_by_uuid(user_data["uuid"]) else False
+    is_meme_existing = True if await meme_service.get_meme_full_details(user_data["uuid"]) else False
 
     if not is_meme_existing:
         # save as unverified meme to database
-        await DBH.add_meme(
+        await meme_service.add_meme(
             uuid=user_data["uuid"],
             title=user_data["title"],
             file_id=user_data["file_id"],
             type_=user_data["media_type"],
-            publisher_user_id=user_data["publisher_user_id"]
+            publisher_id=user_data["publisher_user_id"],
+            tags=user_data["tags"]
         )
-        if user_data["tags"]:
-            await DBH.add_meme_tags(user_data["uuid"], tags)
 
     try:
         message = None
@@ -469,7 +464,7 @@ async def send_to_vote_channel(update: Update, context: ContextTypes.DEFAULT_TYP
                 parse_mode="HTML"
             )
 
-        DBH.set_review_message(user_data["uuid"], message.chat.id, message.message_id)
+        meme_service.set_review_message(user_data["uuid"], message.chat.id, message.message_id)
 
         context.user_data.clear()
         return
@@ -486,17 +481,17 @@ async def send_to_admin_vote_group(update: Update, context: ContextTypes.DEFAULT
         InlineKeyboardButton(TEXTS["meme"]["button"]["reject_admin"], callback_data=f"admin_vote:reject:{user_data['uuid']}", api_kwargs={"style": "danger"}),
     ]])
 
-    is_meme_existing = True if await DBH.get_meme_by_uuid(user_data["uuid"]) else False
+    is_meme_existing = True if await meme_service.get_meme_full_details(user_data["uuid"]) else False
     if not is_meme_existing:
         # save as unverified meme to database
-        await DBH.add_meme(
+        await meme_service.add_meme(
             uuid=user_data["uuid"],
             title=user_data["title"],
             file_id=user_data["file_id"],
             type_=user_data["media_type"],
-            publisher_user_id=query.from_user.id
+            publisher_id=query.from_user.id,
+            tags=user_data["tags"]
         )
-        await DBH.add_meme_tags(user_data["uuid"], user_data["tags"])
 
     try:
         caption_text = TEXTS["meme"]["content_manager_caption"].format(
@@ -511,7 +506,7 @@ async def send_to_admin_vote_group(update: Update, context: ContextTypes.DEFAULT
         elif user_data["media_type"] == "audio":
             message = await context.bot.send_audio(chat_id=CFG["MEME_CONTENT_MANAGER_CHAT_ID"], audio=user_data["file_id"], caption=caption_text, reply_markup=admin_keyboard, parse_mode="HTML")
 
-        DBH.set_review_message(user_data["uuid"], message.chat.id, message.message_id)
+        meme_service.set_review_message(user_data["uuid"], message.chat.id, message.message_id)
 
         await query.edit_message_text(TEXTS["meme"]["sent_for_review"])
         context.user_data.clear()

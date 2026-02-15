@@ -4,8 +4,10 @@ from io import BytesIO
 import json
 from asyncping3 import ping
 
-from core.config_loader import DBH, TEXTS, reload_config, reload_texts
+from container import user_service, meme_service, status_service
+from core.config_loader import TEXTS, reload_config, reload_texts
 from core.utils import check_user, is_admin, is_owner, now_ts, fmt_ts, human_ago, to_persian_digits, get_persian_datetime_text
+
 
 ### --- Admin Panel --- ###
 def admin_panel_keyboard(user_id: int):
@@ -32,20 +34,18 @@ def admin_panel_keyboard(user_id: int):
     return InlineKeyboardMarkup(rows)
 
 async def admin_panel_text():
-    (total_users, banned_users, today_users, total_usage,
-        today_usage, total_memes, unverified_memes, today_memes
-    ) = await DBH.bot_status()
+    status = await status_service.get_dashboard_stats()
 
     return TEXTS["admin"]["panel_text"].format(
         jdatetime=get_persian_datetime_text(),
-        today_user_count=to_persian_digits(today_users),
-        today_usage_count=to_persian_digits(today_usage),
-        new_meme_count=to_persian_digits(today_memes),
-        total_user_count=to_persian_digits(total_users),
-        total_usage_count=to_persian_digits(total_usage),
-        banned_user_count=to_persian_digits(banned_users),
-        total_meme_count=to_persian_digits(total_memes),
-        unverified_meme_count=to_persian_digits(unverified_memes),
+        today_user_count=to_persian_digits(status.today_users),
+        today_usage_count=to_persian_digits(status.today_usage),
+        new_meme_count=to_persian_digits(status.today_memes),
+        total_user_count=to_persian_digits(status.total_users),
+        total_usage_count=to_persian_digits(status.total_usage),
+        banned_user_count=to_persian_digits(status.banned_users),
+        total_meme_count=to_persian_digits(status.total_memes),
+        unverified_meme_count=to_persian_digits(status.unverified_memes),
     )
 
 async def adminpanel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -72,24 +72,21 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     # Check if broadcasting to all or single user
-    target = None
+    user_id = None
     if context.args:
-        key = context.args[0]
-        user = await DBH.get_user(key)
+        user_id = context.args[0]
+        user = await user_service.get_user(user_id)
         if not user:
             await update.effective_chat.send_message(TEXTS["errors"]["user_notfound"], parse_mode="HTML")
             return
-        target_user = key
+        target_user = user_id
 
     # Get all target chat IDs
     chat_ids = []
     if target_user:
         chat_ids = [target_user]
     else:
-        with DBH._connect() as con:
-            cur = con.cursor()
-            # Add all active user IDs
-            user_ids = [row[0] for row in cur.execute("SELECT user_id FROM users").fetchall()]
+        user_ids = await user_service.get_all_user_ids()
         
         # Merge lists and remove duplicates
         chat_ids = list(set(user_ids))
@@ -119,7 +116,7 @@ async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE, use
     query = update.callback_query
     is_edit = query is not None
 
-    row = None
+    user = None
     target_user_id = None
 
     # called from command with args
@@ -133,8 +130,8 @@ async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE, use
             )
             return
 
-        row = await DBH.get_user(target_user_id)
-        if not row:
+        user = await user_service.get_user(target_user_id)
+        if not user:
             await update.effective_chat.send_message(
                 TEXTS["errors"]["user_notfound"],
                 parse_mode="HTML"
@@ -144,9 +141,9 @@ async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE, use
     # called from callback button
     elif is_edit and user_id:
         target_user_id = user_id
-        row = await DBH.get_user(target_user_id)
+        user = await user_service.get_user(target_user_id)
 
-        if not row:
+        if not user:
             await query.answer(TEXTS["errors"]["user_notfound"])
             return
 
@@ -161,7 +158,7 @@ async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE, use
     # build output
     
     text = await generate_userinfo_text(target_user_id)
-    banned = row["banned"]
+    banned = user.banned
 
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
@@ -191,20 +188,19 @@ async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE, use
 
 # Generate userinfo text from user_id
 async def generate_userinfo_text(user_id: int) -> str:
-    user_data = await DBH.get_user(user_id) or (None, None)
-    banned, created_at = user_data
-    user_status = await DBH.user_status(user_id) or (None, None, None, None, None)
+    user = await user_service.get_user(user_id)
+    user_status = await status_service.get_user_stats(user_id)
     now = now_ts()
     text = TEXTS["admin"]["user_info"].format(
         user_id=user_id,
-        total_memes=to_persian_digits(user_status["total_memes"]) if user_status["total_memes"] is not None else "-",
-        unverified_memes=to_persian_digits(user_status["unverified_memes"]) if user_status["unverified_memes"] is not None else "-",
-        today_memes=to_persian_digits(user_status["today_memes"]) if user_status["today_memes"] is not None else "-",
-        total_usage=to_persian_digits(user_status["total_usage"]) if user_status["total_usage"] is not None else "-",
-        today_usage=to_persian_digits(user_status["today_usage"]) if user_status["today_usage"] is not None else "-",
-        created_at=to_persian_digits(fmt_ts(created_at)) if created_at else "-",
-        created_ago=to_persian_digits(human_ago(max(0, now - (created_at or now)))) if created_at else "-",
-        status="🚫 بن شده" if banned else "✅ عادی"
+        total_memes=to_persian_digits(user_status.total_memes) if user_status.total_memes is not None else "-",
+        unverified_memes=to_persian_digits(user_status.unverified_memes) if user_status.unverified_memes is not None else "-",
+        today_memes=to_persian_digits(user_status.today_memes) if user_status.today_memes is not None else "-",
+        total_usage=to_persian_digits(user_status.total_usage) if user_status.total_usage is not None else "-",
+        today_usage=to_persian_digits(user_status.today_usage) if user_status.today_usage is not None else "-",
+        created_at=to_persian_digits(fmt_ts(user.created_at)) if user.created_at else "-",
+        created_ago=to_persian_digits(human_ago(max(0, now - (user.created_at or now)))) if user.created_at else "-",
+        status="🚫 بن شده" if user.banned else "✅ عادی"
     )
     return text
 
@@ -223,7 +219,7 @@ async def admin_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif data.startswith("admin_banuser:"):
         target_user_id = int(data.split(":")[1])
-        user = await DBH.get_user(target_user_id)
+        user = await user_service.get_user(target_user_id)
 
         # Check ban yourself
         if user_id == target_user_id:
@@ -240,7 +236,7 @@ async def admin_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.answer(TEXTS["errors"]["user_notfound"], show_alert=True)
             return
         
-        DBH.set_ban(target_user_id, not user["banned"])
+        user_service.set_ban(target_user_id, not user.banned)
         await query.answer(TEXTS["admin"]["ban_state_changed"], show_alert=True)
         await admin_userinfo(update, context, target_user_id)
         return
@@ -280,24 +276,19 @@ async def admin_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
         removed = 0
         failed = 0
         # fetch unverified memes and their review message info
-        with DBH._connect_sync() as con:
-            cur = con.cursor()
-            rows = cur.execute("SELECT uuid, review_chat_id, review_message_id FROM memes WHERE is_verified = 0 AND is_banned = 0").fetchall()
+        memes = await meme_service.get_all_unverified()
 
-        for row in rows:
-            uuid = row[0]
-            review_chat_id = row[1]
-            review_message_id = row[2]
+        for meme in memes:
             try:
                 # try to remove review message if available
-                if review_chat_id and review_message_id:
+                if meme.review_chat_id and meme.review_message_id:
                     try:
-                        await context.bot.delete_message(chat_id=review_chat_id, message_id=review_message_id)
+                        await context.bot.delete_message(chat_id=meme.review_chat_id, message_id=meme.review_message_id)
                     except Exception:
                         pass
 
                 # remove all meme related records
-                DBH.delete_meme(uuid)
+                await meme_service.delete_meme(meme.uuid)
                 removed += 1
             except Exception:
                 failed += 1
@@ -323,7 +314,7 @@ async def admin_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not is_owner(user_id):
             await query.answer(TEXTS["errors"]["access_denied"], show_alert=True)
             return
-        unbanned = await DBH.unban_all_users()
+        unbanned = await user_service.unban_all_users()
         await query.answer(TEXTS["admin"]["unban_all"].format(count=to_persian_digits(unbanned)), show_alert=True)
         if unbanned > 0:
             await query.edit_message_text(await admin_panel_text(), reply_markup=admin_panel_keyboard(update.effective_user.id), parse_mode="HTML")
