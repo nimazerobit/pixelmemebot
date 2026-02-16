@@ -32,7 +32,7 @@ class UserRepository:
         async with aiosqlite.connect(self.db.path) as con:
             con.row_factory = aiosqlite.Row
             cur = await con.execute(
-                "SELECT user_id, full_name, banned, created_at FROM users ORDER BY created_at ASC LIMIT ? OFFSET ?",
+                "SELECT user_id, full_name, banned, created_at FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?",
                 (limit, offset)
             )
             rows = await cur.fetchall()
