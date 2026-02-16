@@ -43,3 +43,53 @@ class StatusRepository:
                 total_memes=row[0], unverified_memes=row[1], today_memes=row[2],
                 total_usage=row[3], today_usage=row[4]
             )
+        
+    async def get_top_publishers(self, limit: int = 10) -> list[tuple[int, int, int]]:
+        async with aiosqlite.connect(self.db.path) as con:
+            cur = await con.execute("""
+                SELECT
+                    publisher_user_id,
+                    meme_count,
+                    ROW_NUMBER() OVER (ORDER BY meme_count DESC) AS rank
+                FROM (
+                    SELECT
+                        m.publisher_user_id,
+                        COUNT(*) AS meme_count
+                    FROM memes m
+                    JOIN users u ON u.user_id = m.publisher_user_id
+                    WHERE
+                        m.is_verified = 1
+                        AND m.is_banned = 0
+                        AND u.banned = 0
+                    GROUP BY m.publisher_user_id
+                )
+                ORDER BY meme_count DESC
+                LIMIT ?
+            """, (limit,))
+
+            rows = await cur.fetchall()
+            return [(row[0], row[1], row[2]) for row in rows]
+        
+    async def get_publisher_rank(self, publisher_user_id: int) -> tuple[int, int, int] | None:
+        async with aiosqlite.connect(self.db.path) as con:
+            cur = await con.execute("""
+                WITH leaderboard AS (
+                    SELECT
+                        m.publisher_user_id,
+                        COUNT(*) AS meme_count,
+                        ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) AS rank
+                    FROM memes m
+                    JOIN users u ON u.user_id = m.publisher_user_id
+                    WHERE
+                        m.is_verified = 1
+                        AND m.is_banned = 0
+                        AND u.banned = 0
+                    GROUP BY m.publisher_user_id
+                )
+                SELECT publisher_user_id, meme_count, rank
+                FROM leaderboard
+                WHERE publisher_user_id = ?
+            """, (publisher_user_id,))
+
+            row = await cur.fetchone()
+            return (row[0], row[1], row[2]) if row else None

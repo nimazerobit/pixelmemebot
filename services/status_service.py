@@ -10,3 +10,9 @@ class StatusService:
 
     async def get_user_stats(self, user_id: int):
         return await self.status_repo.get_user_stats(user_id)
+    
+    async def get_top_publishers(self, limit: int = 10):
+        return await self.status_repo.get_top_publishers(limit)
+    
+    async def get_publisher_rank(self, user_id):
+        return await self.status_repo.get_publisher_rank(user_id)

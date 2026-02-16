@@ -7,6 +7,7 @@ from core.main_menu_handler import show_main_menu, main_menu_callbacks
 from core.utils import check_user
 from core.meme_module import *
 from core.meme_admin import get_meme, meme_admin_callbacks, edit_title, edit_tags
+from core.leaderboard import leaderboard
 from core.convert_to_voice import convert_to_voice
 
 # start command
@@ -54,6 +55,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("dev", developer))
     app.add_handler(CommandHandler("voice", convert_to_voice))
+    app.add_handler(CommandHandler("leaderboard", leaderboard))
 
     app.add_handler(CommandHandler("user", admin_userinfo))
     app.add_handler(CommandHandler("adminpanel", adminpanel))
