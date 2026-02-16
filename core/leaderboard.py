@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes
 
 from container import status_service
 from core.config_loader import TEXTS
-from core.utils import to_persian_digits, get_persian_datetime_text
+from core.utils import to_persian_digits, get_persian_datetime_text, check_user
 
 async def leaderboard_text(command_user_id: int):
     top_publishers = await status_service.get_top_publishers()
@@ -45,6 +45,8 @@ async def leaderboard_text(command_user_id: int):
     return text
 
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_user(update, context):
+        return
     await update.effective_chat.send_message(
         await leaderboard_text(command_user_id=update.effective_user.id), parse_mode="HTML"
     )
