@@ -104,7 +104,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.effective_chat.send_message(TEXTS["admin"]["broadcast"]["result"].format(success=success, failed=failed), parse_mode="HTML")
 
-### --- Admin view list of all users Command --- ###
+### --- Owner view list of all users Command --- ###
 async def show_all_users(update: Update, context: ContextTypes.DEFAULT_TYPE, page: int = 1):
     if not is_owner(update.effective_user.id):
         return
