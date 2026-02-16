@@ -102,7 +102,7 @@ async def ensure_user(update: Update) -> bool:
     if user is None:
         return False  # error
     try:
-        await user_service.register_user(user.id)
+        await user_service.register_user(user.id, user.full_name)
         return True
     except Exception:
         return False  # error

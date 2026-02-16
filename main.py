@@ -2,7 +2,7 @@ from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, InlineQueryHandler, ChosenInlineResultHandler, ConversationHandler, MessageHandler, filters
 
 from core.config_loader import CFG, TEXTS
-from core.admin_system import admin_userinfo, adminpanel, broadcast, admin_callbacks
+from core.admin_system import show_all_users, admin_userinfo, adminpanel, broadcast, admin_callbacks
 from core.main_menu_handler import show_main_menu, main_menu_callbacks
 from core.utils import check_user
 from core.meme_module import *
@@ -58,6 +58,7 @@ def main():
     app.add_handler(CommandHandler("leaderboard", leaderboard))
 
     app.add_handler(CommandHandler("user", admin_userinfo))
+    app.add_handler(CommandHandler("users", show_all_users))
     app.add_handler(CommandHandler("adminpanel", adminpanel))
     app.add_handler(CommandHandler("broadcast", broadcast))
 

@@ -104,6 +104,44 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.effective_chat.send_message(TEXTS["admin"]["broadcast"]["result"].format(success=success, failed=failed), parse_mode="HTML")
 
+### --- Admin view list of all users Command --- ###
+async def show_all_users(update: Update, context: ContextTypes.DEFAULT_TYPE, page: int = 1):
+    if not is_owner(update.effective_user.id):
+        return
+    
+    PAGE_SIZE = 20
+
+    total = await user_service.get_user_count()
+    if total == 0:
+        if update.callback_query:
+            await update.callback_query.edit_message_text(TEXTS["errors"]["user_notfound"])
+        else:
+            await update.message.reply_text(TEXTS["errors"]["user_notfound"])
+        return
+
+    max_page = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
+    page = max(1, min(page, max_page))
+    offset = (page - 1) * PAGE_SIZE
+
+    users = await user_service.get_users_page(PAGE_SIZE, offset)
+
+    message = (TEXTS["admin"]["users_list"]["header"].format(
+        total=to_persian_digits(total), page=to_persian_digits(page), max_page=to_persian_digits(max_page))
+    ) + "\n".join([f"‎🔹<code>{user.user_id}</code> - {user.full_name or 'بدون نام'}" for user in users])
+
+    buttons = []
+    if page > 1:
+        buttons.append(InlineKeyboardButton("⬅️ قبلی", callback_data=f"admin_show_users:{page-1}"))
+    if page < max_page:
+        buttons.append(InlineKeyboardButton("➡️ بعدی", callback_data=f"admin_show_users:{page+1}"))
+
+    markup = InlineKeyboardMarkup([buttons]) if buttons else None
+
+    if update.callback_query:
+        await update.callback_query.edit_message_text(message[:4096], reply_markup=markup, parse_mode="HTML")
+    else:
+        await update.message.reply_text(message[:4096], reply_markup=markup, parse_mode="HTML")
+
 ### --- Admin view user information Command --- ###
 async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int = None):
     if not await check_user(update, context, check_force_join=False):
@@ -169,6 +207,7 @@ async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE, use
 
     try:
         chat = await context.bot.get_chat(target_user_id)
+        await user_service.register_user(target_user_id, chat.full_name) # update full name
         full_info = chat.to_dict()
     except Exception:
         full_info = "-"
@@ -215,6 +254,11 @@ async def admin_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not await is_admin(user_id):
         await query.answer(TEXTS["errors"]["access_denied"], show_alert=True)
+        return
+    
+    elif data.startswith("admin_show_users:"):
+        page = int(data.split(":")[1])
+        await show_all_users(update, context, page=page)
         return
     
     elif data.startswith("admin_banuser:"):

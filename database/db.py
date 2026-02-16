@@ -16,6 +16,7 @@ class DatabaseManager:
         cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY,
+            full_name TEXT,
             created_at INTEGER DEFAULT (strftime('%s', 'now')),
             banned INTEGER DEFAULT 0
         );

@@ -41,6 +41,9 @@
       "message": "برای ارسال پیام همگانی، این دستور را روی پیام مورد نظر ریپلای کنید.\nیا یک آیدی عددی بدهید.",
       "result": "✅ <b>ارسال شد</b>\n\n🟢 موفق : {success}\n🔴 ناموفق : {failed}"
     },
+    "users_list": {
+      "header": "📊 تعداد کل کاربران: {total}\n📄 صفحه {page} از {max_page}\n\n"
+    },
     "ban_state_changed": "✅ وضعیت بن کاربر تغییر کرد",
     "user_info": "<b>ℹ️ اطلاعات کاربر</b>\n\n<b>• شناسه:</b> <code>{user_id}</code>\n<b>• میم های ثبت شده:</b> {total_memes}\n<b>• میم های تایید نشده:</b> {unverified_memes}\n<b>• میم های ثبت شده امروز:</b> {today_memes}\n<b>• تعداد استفاده:</b> {total_usage}\n<b>• تعداد استفاده امروز:</b> {today_usage}\n<b>• ثبت نام:</b> {created_at} <i>({created_ago} پیش)</i>\n<b>• وضعیت:</b> {status}"
   },
