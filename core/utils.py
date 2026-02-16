@@ -53,8 +53,14 @@ def to_persian_digits(text: str) -> str:
     return "".join(PERSIAN_DIGIT_MAP.get(ch, ch) for ch in str(text))
 
 ### --- Return current shamsi datetime --- ###
-def get_persian_datetime_text():
-    now_tehran = datetime.now(pytz.timezone("Asia/Tehran"))
+def get_persian_datetime_text(timestamp: int = None, prefix: str = "") -> str:
+    tehran_tz = pytz.timezone("Asia/Tehran")
+    if timestamp is None:
+        now_tehran = datetime.now(tehran_tz)
+        prefix = "🗓 امروز "
+    else:
+        now_tehran = datetime.fromtimestamp(timestamp, tehran_tz)
+        prefix = prefix or ""
     j_now = jdatetime.datetime.fromgregorian(datetime=now_tehran)
     weekday_map = {
         0: "شنبه",
@@ -68,8 +74,9 @@ def get_persian_datetime_text():
     weekday = weekday_map[j_now.weekday()]
     date_str = f"{j_now.year}/{j_now.month:02d}/{j_now.day:02d}"
     time_str = now_tehran.strftime("%H:%M")
-
-    return to_persian_digits(f"🗓 امروز {weekday}، تاریخ {date_str}، ساعت {time_str}")
+    return to_persian_digits(
+        f"{prefix}{weekday}، تاریخ {date_str}، ساعت {time_str}"
+    )
 
 ### --- Check is user content manager or not --- ###
 async def is_content_manager(user_id: int) -> bool:
