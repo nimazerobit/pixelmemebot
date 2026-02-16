@@ -44,9 +44,12 @@ class StatusRepository:
                 total_usage=row[3], today_usage=row[4]
             )
         
-    async def get_top_publishers(self, limit: int = 10) -> list[tuple[int, int, int]]:
+    async def get_top_publishers(self, limit: int = 10, timestamp: int = None) -> list[tuple[int, int, int]]:
         async with aiosqlite.connect(self.db.path) as con:
-            cur = await con.execute("""
+            where_clause = "m.is_verified = 1 AND m.is_banned = 0 AND u.banned = 0"
+            if timestamp is not None:
+                where_clause += f" AND m.created_at >= {timestamp}"
+            cur = await con.execute(f"""
                 SELECT
                     publisher_user_id,
                     meme_count,
@@ -58,9 +61,7 @@ class StatusRepository:
                     FROM memes m
                     JOIN users u ON u.user_id = m.publisher_user_id
                     WHERE
-                        m.is_verified = 1
-                        AND m.is_banned = 0
-                        AND u.banned = 0
+                        {where_clause}
                     GROUP BY m.publisher_user_id
                 )
                 ORDER BY meme_count DESC
@@ -70,9 +71,12 @@ class StatusRepository:
             rows = await cur.fetchall()
             return [(row[0], row[1], row[2]) for row in rows]
         
-    async def get_publisher_rank(self, publisher_user_id: int) -> tuple[int, int, int] | None:
+    async def get_publisher_rank(self, publisher_user_id: int, timestamp: int = None) -> tuple[int, int, int] | None:
         async with aiosqlite.connect(self.db.path) as con:
-            cur = await con.execute("""
+            where_clause = "m.is_verified = 1 AND m.is_banned = 0 AND u.banned = 0"
+            if timestamp is not None:
+                where_clause += f" AND m.created_at >= {timestamp}"
+            cur = await con.execute(f"""
                 WITH leaderboard AS (
                     SELECT
                         m.publisher_user_id,
@@ -81,9 +85,7 @@ class StatusRepository:
                     FROM memes m
                     JOIN users u ON u.user_id = m.publisher_user_id
                     WHERE
-                        m.is_verified = 1
-                        AND m.is_banned = 0
-                        AND u.banned = 0
+                        {where_clause}
                     GROUP BY m.publisher_user_id
                 )
                 SELECT publisher_user_id, meme_count, rank

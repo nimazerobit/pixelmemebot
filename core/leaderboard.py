@@ -5,13 +5,13 @@ from container import status_service
 from core.config_loader import TEXTS
 from core.utils import to_persian_digits, get_persian_datetime_text, check_user
 
-async def leaderboard_text(command_user_id: int):
-    top_publishers = await status_service.get_top_publishers()
+async def leaderboard_text(command_user_id: int, timestamp: int = None) -> str:
+    top_publishers = await status_service.get_top_publishers(limit=10, timestamp=timestamp)
 
     if not top_publishers:
         return TEXTS["meme"]["leaderboard"]["empty"]
 
-    text = TEXTS["meme"]["leaderboard"]["header"].format(date=get_persian_datetime_text())
+    text = TEXTS["meme"]["leaderboard"]["header"].format(date=get_persian_datetime_text(timestamp, prefix="🗓 از "))
 
     in_leaderboard = False
 
@@ -32,7 +32,7 @@ async def leaderboard_text(command_user_id: int):
         )
 
     if not in_leaderboard:
-        my_rank = await status_service.get_publisher_rank(command_user_id)
+        my_rank = await status_service.get_publisher_rank(command_user_id, timestamp=timestamp)
         if my_rank:
             user_id, meme_count, rank = my_rank
             text += ("\n➖➖➖➖➖\n"
@@ -47,6 +47,21 @@ async def leaderboard_text(command_user_id: int):
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_user(update, context):
         return
-    await update.effective_chat.send_message(
-        await leaderboard_text(command_user_id=update.effective_user.id), parse_mode="HTML"
-    )
+    if context.args:
+        try:
+            timestamp = int(context.args[0])
+            await update.effective_chat.send_message(
+                await leaderboard_text(command_user_id=update.effective_user.id, timestamp=timestamp), parse_mode="HTML"
+            )
+            return
+        except ValueError:
+            await update.effective_chat.send_message(
+                TEXTS["errors"]["invalid_command"],
+                parse_mode="HTML"
+            )
+            return
+    else:
+        await update.effective_chat.send_message(
+                await leaderboard_text(command_user_id=update.effective_user.id), parse_mode="HTML"
+            )
+        return
