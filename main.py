@@ -3,7 +3,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 
 from core.config_loader import CFG, TEXTS
 from core.admin_system import show_all_users, admin_userinfo, adminpanel, broadcast, admin_callbacks
-from core.main_menu_handler import show_main_menu, main_menu_callbacks
+from core.main_menu_handler import MainMenu
 from core.utils import check_user
 from core.meme_module import *
 from core.meme_admin import get_meme, meme_admin_callbacks, edit_title, edit_tags
@@ -17,11 +17,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_user(update, context):
         return
     
-    args = context.args
-    if args:
-        pass
-
-    await show_main_menu(update, context)
+    main_menu = MainMenu()
+    await main_menu.show(update, context)
 
 # dev command
 async def developer(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -52,10 +49,12 @@ def main():
     app = Application.builder().token(token).build()
 
     # Init
+    main_menu = MainMenu()
     leaderboard = LeaderBoard()
 
     # Commands
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", main_menu.help))
     app.add_handler(CommandHandler("dev", developer))
     app.add_handler(CommandHandler("voice", convert_to_voice))
     app.add_handler(CommandHandler("leaderboard", leaderboard.show))
@@ -70,7 +69,7 @@ def main():
     app.add_handler(CommandHandler("edit_tags", edit_tags))
 
     # Callbacks
-    app.add_handler(CallbackQueryHandler(main_menu_callbacks, pattern=r"^(backtomain|help)"))
+    app.add_handler(CallbackQueryHandler(main_menu.callbacks, pattern=r"^(mainmenu_)"))
     app.add_handler(CallbackQueryHandler(global_callbacks, pattern=r"^(emptycallback)$"))
     app.add_handler(CallbackQueryHandler(meme_admin_callbacks, pattern=r"^(admin_delete_meme|admin_ban_meme)"))
     app.add_handler(CallbackQueryHandler(admin_meme_decision, pattern="^admin_vote:"))
