@@ -2,7 +2,7 @@ from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, InlineQueryHandler, ChosenInlineResultHandler, ConversationHandler, MessageHandler, filters
 
 from core.config_loader import CFG, TEXTS
-from core.admin_system import show_all_users, admin_userinfo, adminpanel, broadcast, admin_callbacks
+from core.admin_system import AdminPanel
 from core.main_menu_handler import MainMenu
 from core.utils import check_user
 from core.meme_module import *
@@ -50,6 +50,7 @@ def main():
 
     # Init
     main_menu = MainMenu()
+    admin_panel = AdminPanel()
     leaderboard = LeaderBoard()
 
     # Commands
@@ -59,10 +60,10 @@ def main():
     app.add_handler(CommandHandler("voice", convert_to_voice))
     app.add_handler(CommandHandler("leaderboard", leaderboard.show))
 
-    app.add_handler(CommandHandler("user", admin_userinfo))
-    app.add_handler(CommandHandler("users", show_all_users))
-    app.add_handler(CommandHandler("adminpanel", adminpanel))
-    app.add_handler(CommandHandler("broadcast", broadcast))
+    app.add_handler(CommandHandler("user", admin_panel.userinfo))
+    app.add_handler(CommandHandler("users", admin_panel.all_users))
+    app.add_handler(CommandHandler("adminpanel", admin_panel.show))
+    app.add_handler(CommandHandler("broadcast", admin_panel.broadcast))
 
     app.add_handler(CommandHandler("get_meme", get_meme))
     app.add_handler(CommandHandler("edit_title", edit_title))
@@ -73,7 +74,7 @@ def main():
     app.add_handler(CallbackQueryHandler(global_callbacks, pattern=r"^(emptycallback)$"))
     app.add_handler(CallbackQueryHandler(meme_admin_callbacks, pattern=r"^(admin_delete_meme|admin_ban_meme)"))
     app.add_handler(CallbackQueryHandler(admin_meme_decision, pattern="^admin_vote:"))
-    app.add_handler(CallbackQueryHandler(admin_callbacks, pattern=r"^(admin_|reload_)"))
+    app.add_handler(CallbackQueryHandler(admin_panel.callbacks, pattern=r"^(admin_panel|reload_)"))
     app.add_handler(CallbackQueryHandler(meme_vote, pattern="^meme_vote:"))
     app.add_handler(CallbackQueryHandler(meme_confirm, pattern="^meme_"))
 
