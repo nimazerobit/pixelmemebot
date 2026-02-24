@@ -3,3 +3,4 @@ jdatetime
 aiosqlite
 pytz
 asyncping3
+asyncio

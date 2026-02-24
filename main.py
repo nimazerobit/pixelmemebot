@@ -1,5 +1,6 @@
 from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, InlineQueryHandler, ChosenInlineResultHandler, ConversationHandler, MessageHandler, filters
+import asyncio
 
 from core.config_loader import CFG, TEXTS
 from core.admin_system import AdminPanel
@@ -8,7 +9,7 @@ from core.utils import check_user
 from core.meme_module import *
 from core.meme_admin import get_meme, meme_admin_callbacks, edit_title, edit_tags
 from core.leaderboard import LeaderBoard
-from core.convert_to_voice import convert_to_voice
+from core.convert_to_voice import convert_to_voice, conversion_worker
 
 # start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -42,11 +43,26 @@ async def global_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "emptycallback":
         await query.answer(r"¯\_(ツ)_/¯")
         return
+    
+# ——— Background Tasks ———
+async def post_init(app: Application):
+    app.bot_data["conversion_task"] = asyncio.create_task(
+        conversion_worker(app)
+    )
+
+async def post_shutdown(app: Application):
+    task = app.bot_data.get("conversion_task")
+    if task:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
 # ——— App bootstrap ———
 def main():
     token = CFG["BOT_TOKEN"]
-    app = Application.builder().token(token).build()
+    app = Application.builder().token(token).post_init(post_init).post_shutdown(post_shutdown).build()
 
     # Init
     main_menu = MainMenu()
