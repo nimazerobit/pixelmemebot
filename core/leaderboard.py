@@ -19,19 +19,19 @@ class LeaderBoard:
 
         in_leaderboard = False
 
-        for user_id, meme_count, rank in top_publishers:
+        for user_id, full_name, meme_count, rank in top_publishers:
             is_me = user_id == command_user_id
-            fire = "🔥" if rank == 1 else ""
+            emoji = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else ""
             pointer = "(شما)" if is_me else ""
-            badge = f"{fire} {pointer}".strip()
+            badge = f"{emoji} {pointer}".strip()
 
             if is_me:
                 in_leaderboard = True
 
             text += (
-                f"{to_persian_digits(rank)}. "
-                f"{user_id} - "
-                f"{to_persian_digits(meme_count)} میم "
+                f"‏{to_persian_digits(rank)}. "
+                f"<code>{full_name if full_name else user_id}</code> - "
+                f"‏{to_persian_digits(meme_count)} میم "
                 f"{badge}\n"
             )
 
@@ -40,9 +40,9 @@ class LeaderBoard:
             if my_rank:
                 user_id, meme_count, rank = my_rank
                 text += ("\n➖➖➖➖➖\n"
-                    f"{to_persian_digits(rank)}. "
-                    f"{user_id} - "
-                    f"{to_persian_digits(meme_count)} میم"
+                    f"‏{to_persian_digits(rank)}. "
+                    f"<code>{full_name if full_name else user_id}</code> - "
+                    f"‏{to_persian_digits(meme_count)} میم"
                     f"(شما)\n"
                 )
 

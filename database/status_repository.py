@@ -52,24 +52,25 @@ class StatusRepository:
             cur = await con.execute(f"""
                 SELECT
                     publisher_user_id,
+                    full_name,
                     meme_count,
                     ROW_NUMBER() OVER (ORDER BY meme_count DESC) AS rank
                 FROM (
                     SELECT
                         m.publisher_user_id,
+                        u.full_name,
                         COUNT(*) AS meme_count
                     FROM memes m
                     JOIN users u ON u.user_id = m.publisher_user_id
-                    WHERE
-                        {where_clause}
-                    GROUP BY m.publisher_user_id
+                    WHERE {where_clause}
+                    GROUP BY m.publisher_user_id, u.full_name
                 )
                 ORDER BY meme_count DESC
                 LIMIT ?
             """, (limit,))
 
             rows = await cur.fetchall()
-            return [(row[0], row[1], row[2]) for row in rows]
+            return [(row[0], row[1], row[2], row[3]) for row in rows]
         
     async def get_publisher_rank(self, publisher_user_id: int, timestamp: int = None) -> tuple[int, int, int] | None:
         async with aiosqlite.connect(self.db.path) as con:

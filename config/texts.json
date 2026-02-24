@@ -87,7 +87,7 @@
     },
     "leaderboard": {
       "empty": "😞 لیدربرد خالیه",
-      "header": "<b>🏆 برترین میمر های پیکسل میم:</b>\n{date}\n\n",
+      "header": "<b>🏆 برترین میمر های پیکسل میم:</b>\n<blockquote>{date}</blockquote>\n\n",
       "row": ""
     },
     "meme_admin": {
