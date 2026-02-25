@@ -180,7 +180,7 @@ class AdminPanel:
 
         message = (TEXTS["admin"]["users_list"]["header"].format(
             total=to_persian_digits(total), page=to_persian_digits(page), max_page=to_persian_digits(max_page))
-        ) + "\n".join([f"‎🔹<code>{user.user_id}</code> - {user.full_name or 'بدون نام'}" for user in users])
+        ) + "\n".join([f"‎🔹<a href='tg://openmessage?user_id={user.user_id}'>{user.user_id}</a> - {user.full_name or 'بدون نام'}" for user in users])
 
         buttons = []
         if page > 1:
