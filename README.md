@@ -6,6 +6,7 @@ Inline Telegram Meme bot with python and SQLite database.
 - Show recent used meme at top of inline results
 - Convert mp3 and other audio formats to Telegram voice using ffmpeg.
 - Force join and ban system for users.
+- and etc...
 
 ## 📥 Installation & Setup
 1.  Clone project:
@@ -30,4 +31,5 @@ Inline Telegram Meme bot with python and SQLite database.
     ```
 
 ## 👍 Contributing
-Open issues for improvements.
+Feel free to submit a pull request.
+Thank you for helping improve this project!
