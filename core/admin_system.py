@@ -243,30 +243,30 @@ class AdminPanel:
         
         await update.effective_chat.send_message(TEXTS["admin"]["broadcast"]["result"].format(success=success, failed=failed), parse_mode="HTML")
 
-    async def _ban_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int):
+    async def _ban_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE, target_user_id: int):
         query = update.callback_query
-
-        user = await user_service.get_user(user_id)
+        admin_id = update.effective_user.id
 
         # check ban yourself
-        if user_id == user_id:
+        if target_user_id == admin_id:
             await query.answer("میخوای خودتو بن کنی 😔", show_alert=True)
             return
-        
+
         # check permission
-        if is_owner(user_id):
+        if is_owner(target_user_id):
             await query.answer(TEXTS["errors"]["access_denied"], show_alert=True)
             return
 
-        # check is user available
+        # check user availability
+        user = await user_service.get_user(target_user_id)
         if not user:
             await query.answer(TEXTS["errors"]["user_notfound"], show_alert=True)
             return
-        
-        user_service.set_ban(user_id, not user.banned)
+
+        await user_service.set_ban(target_user_id, not user.banned)
+
         await query.answer(TEXTS["admin"]["ban_state_changed"], show_alert=True)
-        await self.userinfo(update, context, user_id)
-        return
+        await self.userinfo(update, context, target_user_id)
     
     async def _reload_config(self, update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int):
         query = update.callback_query
@@ -366,7 +366,8 @@ class AdminPanel:
             return
         
         elif data.startswith("admin_panel_banuser:"):
-            await self._ban_user(update, context, user_id)
+            target_user_id = int(data.split(":")[1])
+            await self._ban_user(update, context, target_user_id)
         
         elif data == "reload_config":
             await self._reload_config(update, context, user_id)
