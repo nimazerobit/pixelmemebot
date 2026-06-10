@@ -26,7 +26,7 @@ class UserRepository:
         async with aiosqlite.connect(self.db.path) as con:
             cur = await con.execute("SELECT user_id FROM users")
             rows = await cur.fetchall()
-            return [row['user_id'] for row in rows]
+            return [row[0] for row in rows]
         
     async def get_users_page(self, limit: int, offset: int) -> list[User]:
         async with aiosqlite.connect(self.db.path) as con:
