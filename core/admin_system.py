@@ -211,6 +211,7 @@ class AdminPanel:
         
         # Check if broadcasting to all or single user
         user_id = None
+        target_user = None
         if context.args:
             user_id = context.args[0]
             user = await user_service.get_user(user_id)
